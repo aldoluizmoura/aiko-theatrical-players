@@ -22,17 +22,17 @@ Também desejam que o extrato possa ser gerado como um XML, além do formato de 
 
 ## 🛠️ Especificação da atividade
 
-Este é um exercício de refatoração. O design inicial da aplicação é pouco testável, portanto os únicos testes que a aplicação possui no momento são os [ApprovalTests](https://approvaltests.com/) para validar a saída final. É esperado que você torne o código mais testável e então adicione testes unitários que validem a aplicação de forma mais granular e que dêem segurança para futuras refatorações e para o acréscimo das novas funcionalidades.
+Este é um exercício de refatoração. O design inicial da aplicação é pouco testável, portanto os únicos testes que a aplicação possui no momento são testes de aprovação (usando a biblioteca [Verify](https://github.com/VerifyTests/Verify)) para validar a saída final. É esperado que você torne o código mais testável e então adicione testes unitários que validem a aplicação de forma mais granular e que dêem segurança para futuras refatorações e para o acréscimo das novas funcionalidades.
 
 Também serão observadas a abordagem para desenvolvimento da solução (Design Patterns, DDD, SOLID, etc.) e a arquitetura utilizada (Clean Architecture, Onion Architecture, etc.).
 
-O projeto de testes possui três ApprovalTests.
+O projeto de testes possui três testes de aprovação.
 
 * O teste TestStatementExampleLegacy, está passando no estado atual do código. Este teste servirá para te dar segurança das primeiras refatorações até que você escreva os testes unitários, mas ao final, com as funcionalidades novas implementadas, este teste se torna obsoleto.
 * O teste TestTextStatementExample está implementado, porém não executa, pois o gênero histórico ainda não está implementado.
 * O teste TestXmlStatementExample não está implementado e deve ser implementado por você e gerar a saída aprovada que está no projeto de testes.
 
-O código dos testes pode ser refatorado, desde que a saída continue a mesma e os testes continuem cumprindo o mesmo propósito. É esperado que você implemente as novas funcionalidades pedidas para que todos os ApprovalTests passem.
+O código dos testes pode ser refatorado, desde que a saída continue a mesma e os testes continuem cumprindo o mesmo propósito. É esperado que você implemente as novas funcionalidades pedidas para que todos os testes de aprovação passem.
 
 ## 🚀 Extras (Opcional)
 
@@ -52,4 +52,4 @@ Não é mandatório, mas de maneira opcional os seguintes requisitos poderão se
 * Todas performances dão 1 crédito para cada espectador acima de 30, não valendo nenhum crédito para uma platéia menor ou igual a 30
 * Existe um bônus de créditos de um quinto da platéia arredondados para baixo, exclusivo para peças de comédia
 * As peças históricas são, por algum motivo, mais complicadas e têm o valor igual à soma dos valores correspondentes a uma peça de tragédia e uma de comédia
-* A estrutura do XML deve seguir como referência a saída aprovada no ApprovalTest correspondente
+* A estrutura do XML deve seguir como referência a saída aprovada no teste de aprovação correspondente

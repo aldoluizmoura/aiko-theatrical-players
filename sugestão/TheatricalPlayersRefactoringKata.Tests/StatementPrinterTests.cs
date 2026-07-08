@@ -1,16 +1,14 @@
-using System;
 using System.Collections.Generic;
-using ApprovalTests;
-using ApprovalTests.Reporters;
+using System.Threading.Tasks;
 using Xunit;
+using static VerifyXunit.Verifier;
 
 namespace TheatricalPlayersRefactoringKata.Tests;
 
 public class StatementPrinterTests
 {
     [Fact]
-    [UseReporter(typeof(DiffReporter))]
-    public void TestStatementExampleLegacy()
+    public async Task TestStatementExampleLegacy()
     {
         var plays = new Dictionary<string, Play>();
         plays.Add("hamlet", new Play("Hamlet", 4024, "tragedy"));
@@ -30,12 +28,11 @@ public class StatementPrinterTests
         StatementPrinter statementPrinter = new StatementPrinter();
         var result = statementPrinter.Print(invoice, plays);
 
-        Approvals.Verify(result);
+        await Verify(result);
     }
 
     [Fact]
-    [UseReporter(typeof(DiffReporter))]
-    public void TestTextStatementExample()
+    public async Task TestTextStatementExample()
     {
         var plays = new Dictionary<string, Play>();
         plays.Add("hamlet", new Play("Hamlet", 4024, "tragedy"));
@@ -61,6 +58,6 @@ public class StatementPrinterTests
         StatementPrinter statementPrinter = new StatementPrinter();
         var result = statementPrinter.Print(invoice, plays);
 
-        Approvals.Verify(result);
+        await Verify(result);
     }
 }

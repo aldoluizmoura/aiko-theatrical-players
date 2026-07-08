@@ -1,4 +1,8 @@
 [Bb]in/
 [Oo]bj/
 
-*.received.txt
+# Verify
+*.received.*
+
+# vscode
+.vscode
