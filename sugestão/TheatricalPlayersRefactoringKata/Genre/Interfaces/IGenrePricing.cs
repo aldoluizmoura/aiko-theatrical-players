@@ -1,4 +1,4 @@
-namespace TheatricalPlayersRefactoringKata.Genre;
+namespace TheatricalPlayersRefactoringKata.Genre.Interfaces;
 
 public interface IGenrePricing
 {

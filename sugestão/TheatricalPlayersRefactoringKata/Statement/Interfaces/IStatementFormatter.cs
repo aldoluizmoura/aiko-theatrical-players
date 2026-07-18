@@ -1,6 +1,6 @@
 using StatementModel = TheatricalPlayersRefactoringKata.Statement.Statement;
 
-namespace TheatricalPlayersRefactoringKata.Formatting;
+namespace TheatricalPlayersRefactoringKata.Statement.Interfaces;
 
 public interface IStatementFormatter
 {

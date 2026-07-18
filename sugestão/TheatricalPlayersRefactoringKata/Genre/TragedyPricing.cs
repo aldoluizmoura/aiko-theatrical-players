@@ -1,4 +1,5 @@
 using System;
+using TheatricalPlayersRefactoringKata.Genre.Interfaces;
 
 namespace TheatricalPlayersRefactoringKata.Genre;
 

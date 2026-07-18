@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using TheatricalPlayersRefactoringKata.Formatting;
 using TheatricalPlayersRefactoringKata.Statement;
+using TheatricalPlayersRefactoringKata.Statement.Interfaces;
 
 namespace TheatricalPlayersRefactoringKata;
 
