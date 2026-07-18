@@ -21,10 +21,10 @@ public class StatementPrinter
             var thisAmount = _calculator.CalculateAmount(play, perf);
             volumeCredits += _calculator.CalculateCredits(play, perf);
 
-            result += String.Format(cultureInfo, "  {0}: {1:C} ({2} seats)\n", play.Name, Convert.ToDecimal(thisAmount / 100), perf.Audience);
+            result += String.Format(cultureInfo, "  {0}: {1:C} ({2} seats)\n", play.Name, thisAmount / 100m, perf.Audience);
             totalAmount += thisAmount;
         }
-        result += String.Format(cultureInfo, "Amount owed is {0:C}\n", Convert.ToDecimal(totalAmount / 100));
+        result += String.Format(cultureInfo, "Amount owed is {0:C}\n", totalAmount / 100m);
         result += String.Format("You earned {0} credits\n", volumeCredits);
         return result;
     }
