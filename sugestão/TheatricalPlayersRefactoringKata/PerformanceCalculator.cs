@@ -12,6 +12,7 @@ public class PerformanceCalculator
         {
             "tragedy" => CalculateTragedyAmount(baseAmount, performance.Audience),
             "comedy" => CalculateComedyAmount(baseAmount, performance.Audience),
+            "history" => CalculateTragedyAmount(baseAmount, performance.Audience) + CalculateComedyAmount(baseAmount, performance.Audience),
             _ => throw new Exception("unknown type: " + play.Type)
         };
     }
