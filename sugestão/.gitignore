@@ -1,8 +1,3 @@
-[Bb]in/
-[Oo]bj/
-
-# Verify
+# Kept for local convenience; the repo root .gitignore covers .NET artifacts.
+# Verify approval testing leftovers
 *.received.*
-
-# vscode
-.vscode
