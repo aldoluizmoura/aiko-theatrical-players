@@ -155,6 +155,10 @@ coverage*.info
 [Tt]est[Rr]esults/
 coveragereport/
 
+# Async statement XML output
+statements-output/
+**/statements-output/
+
 # NCrunch
 _NCrunch_*
 .*crunch*.local.xml

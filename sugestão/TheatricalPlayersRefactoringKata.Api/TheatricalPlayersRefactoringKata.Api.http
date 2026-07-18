@@ -1,0 +1,28 @@
+@TheatricalPlayersRefactoringKata.Api_HostAddress = http://localhost:5178
+
+### Enqueue statement job
+POST {{TheatricalPlayersRefactoringKata.Api_HostAddress}}/api/statements
+Content-Type: application/json
+
+{
+  "customer": "BigCo",
+  "plays": {
+    "hamlet": { "name": "Hamlet", "lines": 4024, "type": "tragedy" },
+    "as-like": { "name": "As You Like It", "lines": 2670, "type": "comedy" },
+    "othello": { "name": "Othello", "lines": 3560, "type": "tragedy" },
+    "henry-v": { "name": "Henry V", "lines": 3227, "type": "history" },
+    "john": { "name": "King John", "lines": 2648, "type": "history" },
+    "richard-iii": { "name": "Richard III", "lines": 3718, "type": "history" }
+  },
+  "performances": [
+    { "playId": "hamlet", "audience": 55 },
+    { "playId": "as-like", "audience": 35 },
+    { "playId": "othello", "audience": 40 },
+    { "playId": "henry-v", "audience": 20 },
+    { "playId": "john", "audience": 39 },
+    { "playId": "henry-v", "audience": 20 }
+  ]
+}
+
+###
+GET {{TheatricalPlayersRefactoringKata.Api_HostAddress}}/api/statements
