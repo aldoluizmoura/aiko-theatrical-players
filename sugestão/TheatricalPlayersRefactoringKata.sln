@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheatricalPlayersRefactorin
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheatricalPlayersRefactoringKata.Api", "TheatricalPlayersRefactoringKata.Api\TheatricalPlayersRefactoringKata.Api.csproj", "{D716635C-3400-47C7-B1B9-B3FAD1666CF2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheatricalPlayersRefactoringKata.Api.Tests", "TheatricalPlayersRefactoringKata.Api.Tests\TheatricalPlayersRefactoringKata.Api.Tests.csproj", "{E2B8A6C9-36AE-4298-95C9-A4590E2E6ACF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,18 @@ Global
 		{D716635C-3400-47C7-B1B9-B3FAD1666CF2}.Release|x64.Build.0 = Release|Any CPU
 		{D716635C-3400-47C7-B1B9-B3FAD1666CF2}.Release|x86.ActiveCfg = Release|Any CPU
 		{D716635C-3400-47C7-B1B9-B3FAD1666CF2}.Release|x86.Build.0 = Release|Any CPU
+		{E2B8A6C9-36AE-4298-95C9-A4590E2E6ACF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2B8A6C9-36AE-4298-95C9-A4590E2E6ACF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E2B8A6C9-36AE-4298-95C9-A4590E2E6ACF}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E2B8A6C9-36AE-4298-95C9-A4590E2E6ACF}.Debug|x64.Build.0 = Debug|Any CPU
+		{E2B8A6C9-36AE-4298-95C9-A4590E2E6ACF}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E2B8A6C9-36AE-4298-95C9-A4590E2E6ACF}.Debug|x86.Build.0 = Debug|Any CPU
+		{E2B8A6C9-36AE-4298-95C9-A4590E2E6ACF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E2B8A6C9-36AE-4298-95C9-A4590E2E6ACF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E2B8A6C9-36AE-4298-95C9-A4590E2E6ACF}.Release|x64.ActiveCfg = Release|Any CPU
+		{E2B8A6C9-36AE-4298-95C9-A4590E2E6ACF}.Release|x64.Build.0 = Release|Any CPU
+		{E2B8A6C9-36AE-4298-95C9-A4590E2E6ACF}.Release|x86.ActiveCfg = Release|Any CPU
+		{E2B8A6C9-36AE-4298-95C9-A4590E2E6ACF}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
