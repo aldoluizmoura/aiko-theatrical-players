@@ -151,6 +151,10 @@ coverage*.info
 *.coverage
 *.coveragexml
 
+# Coverlet / ReportGenerator
+[Tt]est[Rr]esults/
+coveragereport/
+
 # NCrunch
 _NCrunch_*
 .*crunch*.local.xml
