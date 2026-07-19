@@ -159,6 +159,12 @@ coveragereport/
 statements-output/
 **/statements-output/
 
+# SQLite database and Serilog files
+*.db
+*.db-shm
+*.db-wal
+logs/
+
 # NCrunch
 _NCrunch_*
 .*crunch*.local.xml

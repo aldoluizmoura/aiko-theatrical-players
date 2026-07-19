@@ -20,9 +20,9 @@ O domínio gera extratos de fatura de uma companhia de teatro (tragédia, coméd
 ### Extras
 - API REST com **Swagger**
 - Processamento **assíncrono** (fila + worker) gerando XML em disco
+- Persistência em **SQLite** (EF Core) do extrato, peças e linhas calculadas
+- Logs estruturados com **Serilog** (console + arquivo rolling) para debug em produção
 - Testes de integração da API
-
-Persistência em banco ficou de fora desta entrega.
 
 ---
 
@@ -33,7 +33,9 @@ Persistência em banco ficou de fora desta entrega.
 | Runtime | .NET 10 / C# |
 | Testes | xUnit, Verify (aprovação), Coverlet + ReportGenerator |
 | API | ASP.NET Core, Swashbuckle (Swagger UI) |
+| Persistência | EF Core + SQLite |
 | Async | `Channel<T>` + `BackgroundService` |
+| Logging | Serilog (console + arquivo) |
 | Integração API | `WebApplicationFactory` |
 
 ---
@@ -53,12 +55,15 @@ StatementGenerator ──► GenrePricingFactory ──► Tragedy / Comedy / Hi
       └── XmlStatementFormatter
       │
       ▼ (API)
- POST /api/statements ──► fila ──► worker ──► statements-output/{id}.xml
+ POST /api/statements ──► SQLite + fila ──► worker ──► statements-output/{id}.xml
+                                              │
+                                              └── atualiza status/linhas/XML no banco
 ```
 
 - **Gêneros:** cada um implementa `IGenrePricing`
 - **Formatos:** cada um implementa `IStatementFormatter`
-- **API:** enfileira o job e responde `202`; o worker grava o XML
+- **API:** enfileira o job, persiste no SQLite e responde `202`; o worker grava o XML e atualiza o registro
+- **Logs:** `logs/api-YYYYMMDD.log` (+ console); em Development o nível sobe para Debug
 
 Código principal em [`sugestão/`](sugestão/).
 

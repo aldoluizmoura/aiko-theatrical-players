@@ -1,13 +1,15 @@
+using TheatricalPlayersRefactoringKata.Api.Persistence;
 using TheatricalPlayersRefactoringKata.Formatting;
 using TheatricalPlayersRefactoringKata.Statement;
 using TheatricalPlayersRefactoringKata.Statement.Interfaces;
+using Serilog.Context;
 
 namespace TheatricalPlayersRefactoringKata.Api.Processing;
 
 public class StatementProcessingWorker : BackgroundService
 {
     private readonly IStatementJobQueue _queue;
-    private readonly IStatementJobStore _store;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly IConfiguration _configuration;
     private readonly ILogger<StatementProcessingWorker> _logger;
     private readonly StatementGenerator _generator = new();
@@ -15,12 +17,12 @@ public class StatementProcessingWorker : BackgroundService
 
     public StatementProcessingWorker(
         IStatementJobQueue queue,
-        IStatementJobStore store,
+        IServiceScopeFactory scopeFactory,
         IConfiguration configuration,
         ILogger<StatementProcessingWorker> logger)
     {
         _queue = queue;
-        _store = store;
+        _scopeFactory = scopeFactory;
         _configuration = configuration;
         _logger = logger;
     }
@@ -41,8 +43,13 @@ public class StatementProcessingWorker : BackgroundService
 
     private async Task ProcessJobAsync(StatementJob job, string outputDirectory, CancellationToken cancellationToken)
     {
+        using var _ = LogContext.PushProperty("JobId", job.Id);
+        using var scope = _scopeFactory.CreateScope();
+        var store = scope.ServiceProvider.GetRequiredService<IStatementJobStore>();
+
         job.Status = StatementJobStatus.Processing;
-        _store.Update(job);
+        await store.UpdateAsync(job, cancellationToken);
+        _logger.LogInformation("Processing statement job for customer {Customer}", job.Invoice.Customer);
 
         try
         {
@@ -54,19 +61,27 @@ public class StatementProcessingWorker : BackgroundService
 
             job.Status = StatementJobStatus.Completed;
             job.OutputFilePath = filePath;
+            job.XmlContent = xml;
+            job.TotalAmountInCents = statement.TotalAmountInCents;
+            job.TotalCredits = statement.TotalCredits;
+            job.ResultLines = statement.Lines;
             job.CompletedAt = DateTimeOffset.UtcNow;
-            _store.Update(job);
+            await store.UpdateAsync(job, cancellationToken);
 
-            _logger.LogInformation("Statement job {JobId} completed. File: {FilePath}", job.Id, filePath);
+            _logger.LogInformation(
+                "Statement job completed. File={FilePath}, TotalAmountInCents={TotalAmountInCents}, TotalCredits={TotalCredits}",
+                filePath,
+                statement.TotalAmountInCents,
+                statement.TotalCredits);
         }
         catch (Exception ex)
         {
             job.Status = StatementJobStatus.Failed;
             job.Error = ex.Message;
             job.CompletedAt = DateTimeOffset.UtcNow;
-            _store.Update(job);
+            await store.UpdateAsync(job, cancellationToken);
 
-            _logger.LogError(ex, "Statement job {JobId} failed", job.Id);
+            _logger.LogError(ex, "Statement job failed for customer {Customer}", job.Invoice.Customer);
         }
     }
 }

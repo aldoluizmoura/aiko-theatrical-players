@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using TheatricalPlayersRefactoringKata.Api.Contracts;
+using TheatricalPlayersRefactoringKata.Api.Persistence;
 using TheatricalPlayersRefactoringKata.Api.Processing;
 
 namespace TheatricalPlayersRefactoringKata.Api.Controllers;
@@ -10,15 +11,20 @@ public class StatementsController : ControllerBase
 {
     private readonly IStatementJobQueue _queue;
     private readonly IStatementJobStore _store;
+    private readonly ILogger<StatementsController> _logger;
 
-    public StatementsController(IStatementJobQueue queue, IStatementJobStore store)
+    public StatementsController(
+        IStatementJobQueue queue,
+        IStatementJobStore store,
+        ILogger<StatementsController> logger)
     {
         _queue = queue;
         _store = store;
+        _logger = logger;
     }
 
     /// <summary>
-    /// Enqueues a statement generation job. Processing happens asynchronously and writes an XML file to disk.
+    /// Enqueues a statement generation job. Processing happens asynchronously, persists the statement and writes XML to disk.
     /// </summary>
     [HttpPost]
     [ProducesResponseType(typeof(StatementJobResponse), StatusCodes.Status202Accepted)]
@@ -64,31 +70,41 @@ public class StatementsController : ControllerBase
             Plays = plays
         };
 
-        _store.Add(job);
+        await _store.AddAsync(job, cancellationToken);
         await _queue.EnqueueAsync(job, cancellationToken);
+
+        _logger.LogInformation(
+            "Enqueued statement job {JobId} for customer {Customer} with {PerformanceCount} performances",
+            job.Id,
+            job.Invoice.Customer,
+            job.Invoice.Performances.Count);
 
         return AcceptedAtAction(nameof(GetById), new { id = job.Id }, StatementJobResponse.FromJob(job));
     }
 
     /// <summary>
-    /// Lists all statement jobs known to this process.
+    /// Lists persisted statement jobs.
     /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<StatementJobResponse>), StatusCodes.Status200OK)]
-    public ActionResult<IEnumerable<StatementJobResponse>> GetAll()
-        => Ok(_store.GetAll().Select(StatementJobResponse.FromJob));
+    public async Task<ActionResult<IEnumerable<StatementJobResponse>>> GetAll(CancellationToken cancellationToken)
+    {
+        var jobs = await _store.GetAllAsync(cancellationToken);
+        return Ok(jobs.Select(StatementJobResponse.FromJob));
+    }
 
     /// <summary>
-    /// Gets the current status of a statement job.
+    /// Gets a persisted statement job, including plays and calculated lines when available.
     /// </summary>
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(StatementJobResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult<StatementJobResponse> GetById(Guid id)
+    public async Task<ActionResult<StatementJobResponse>> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var job = _store.Get(id);
+        var job = await _store.GetAsync(id, cancellationToken);
         if (job is null)
         {
+            _logger.LogDebug("Statement job {JobId} was not found", id);
             return NotFound();
         }
 
@@ -96,7 +112,7 @@ public class StatementsController : ControllerBase
     }
 
     /// <summary>
-    /// Downloads the generated XML when the job is completed.
+    /// Downloads the generated XML when the job is completed (from disk or persisted content).
     /// </summary>
     [HttpGet("{id:guid}/xml")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -104,23 +120,32 @@ public class StatementsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> DownloadXml(Guid id, CancellationToken cancellationToken)
     {
-        var job = _store.Get(id);
+        var job = await _store.GetAsync(id, cancellationToken);
         if (job is null)
         {
             return NotFound();
         }
 
-        if (job.Status != StatementJobStatus.Completed || string.IsNullOrWhiteSpace(job.OutputFilePath))
+        if (job.Status != StatementJobStatus.Completed)
         {
             return Conflict(new { message = $"Job is {job.Status}. XML is not available yet." });
         }
 
-        if (!System.IO.File.Exists(job.OutputFilePath))
+        if (!string.IsNullOrWhiteSpace(job.OutputFilePath) && System.IO.File.Exists(job.OutputFilePath))
         {
-            return NotFound(new { message = "XML file was not found on disk." });
+            var bytes = await System.IO.File.ReadAllBytesAsync(job.OutputFilePath, cancellationToken);
+            return File(bytes, "application/xml", Path.GetFileName(job.OutputFilePath));
         }
 
-        var bytes = await System.IO.File.ReadAllBytesAsync(job.OutputFilePath, cancellationToken);
-        return File(bytes, "application/xml", Path.GetFileName(job.OutputFilePath));
+        if (!string.IsNullOrWhiteSpace(job.XmlContent))
+        {
+            _logger.LogWarning("XML file missing for job {JobId}; serving persisted XmlContent instead", id);
+            return File(
+                System.Text.Encoding.UTF8.GetBytes(job.XmlContent),
+                "application/xml",
+                $"{id}.xml");
+        }
+
+        return NotFound(new { message = "XML content was not found." });
     }
 }

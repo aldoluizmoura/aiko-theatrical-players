@@ -8,7 +8,7 @@ using TheatricalPlayersRefactoringKata.Api.Processing;
 
 namespace TheatricalPlayersRefactoringKata.Api.Tests;
 
-public class StatementsApiTests : IClassFixture<WebApplicationFactory<Program>>, IAsyncLifetime
+public class StatementsApiTests : IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -16,37 +16,45 @@ public class StatementsApiTests : IClassFixture<WebApplicationFactory<Program>>,
         Converters = { new JsonStringEnumConverter() }
     };
 
-    private readonly WebApplicationFactory<Program> _factory;
+    private WebApplicationFactory<Program> _factory = null!;
     private HttpClient _client = null!;
-    private string _outputDirectory = null!;
-
-    public StatementsApiTests(WebApplicationFactory<Program> factory)
-    {
-        _factory = factory;
-    }
+    private string _testDirectory = null!;
 
     public Task InitializeAsync()
     {
-        _outputDirectory = Path.Combine(Path.GetTempPath(), "theatrical-api-tests", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_outputDirectory);
+        _testDirectory = Path.Combine(Path.GetTempPath(), "theatrical-api-tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(_testDirectory);
 
-        _client = _factory.WithWebHostBuilder(builder =>
+        var dbPath = Path.Combine(_testDirectory, "test.db");
+        var outputDirectory = Path.Combine(_testDirectory, "statements-output");
+
+        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.UseSetting("StatementOutput:Directory", _outputDirectory);
-        }).CreateClient();
+            builder.UseSetting("StatementOutput:Directory", outputDirectory);
+            builder.UseSetting("ConnectionStrings:TheatricalPlayers", $"Data Source={dbPath};Cache=Shared");
+            builder.UseSetting("Serilog:FilePath", Path.Combine(_testDirectory, "logs", "api-.log"));
+        });
 
+        _client = _factory.CreateClient();
         return Task.CompletedTask;
     }
 
-    public Task DisposeAsync()
+    public async Task DisposeAsync()
     {
         _client.Dispose();
-        if (Directory.Exists(_outputDirectory))
-        {
-            Directory.Delete(_outputDirectory, recursive: true);
-        }
+        await _factory.DisposeAsync();
 
-        return Task.CompletedTask;
+        if (Directory.Exists(_testDirectory))
+        {
+            try
+            {
+                Directory.Delete(_testDirectory, recursive: true);
+            }
+            catch
+            {
+                // SQLite may briefly lock the file on Windows during disposal.
+            }
+        }
     }
 
     [Fact]
@@ -59,6 +67,8 @@ public class StatementsApiTests : IClassFixture<WebApplicationFactory<Program>>,
         var job = await response.Content.ReadFromJsonAsync<StatementJobResponse>(JsonOptions);
         Assert.NotNull(job);
         Assert.NotEqual(Guid.Empty, job.Id);
+        Assert.Equal("BigCo", job.Customer);
+        Assert.NotEmpty(job.Plays);
         Assert.True(job.Status is StatementJobStatus.Queued or StatementJobStatus.Processing or StatementJobStatus.Completed);
     }
 
@@ -82,7 +92,7 @@ public class StatementsApiTests : IClassFixture<WebApplicationFactory<Program>>,
     }
 
     [Fact]
-    public async Task StatementJob_IsProcessedAsynchronously_AndXmlCanBeDownloaded()
+    public async Task StatementJob_IsPersistedProcessedAndXmlCanBeDownloaded()
     {
         var createResponse = await _client.PostAsJsonAsync("/api/statements", CreateValidRequest());
         Assert.Equal(HttpStatusCode.Accepted, createResponse.StatusCode);
@@ -92,6 +102,11 @@ public class StatementsApiTests : IClassFixture<WebApplicationFactory<Program>>,
 
         var completed = await WaitForCompletionAsync(created.Id);
         Assert.Equal(StatementJobStatus.Completed, completed.Status);
+        Assert.Equal("BigCo", completed.Customer);
+        Assert.Equal(399540, completed.TotalAmountInCents);
+        Assert.Equal(56, completed.TotalCredits);
+        Assert.NotEmpty(completed.Plays);
+        Assert.Equal(6, completed.Lines.Count);
         Assert.False(string.IsNullOrWhiteSpace(completed.OutputFilePath));
         Assert.True(File.Exists(completed.OutputFilePath));
 
@@ -106,15 +121,19 @@ public class StatementsApiTests : IClassFixture<WebApplicationFactory<Program>>,
     }
 
     [Fact]
-    public async Task GetStatements_ReturnsCreatedJobs()
+    public async Task GetStatements_ReturnsPersistedJobs()
     {
         var createResponse = await _client.PostAsJsonAsync("/api/statements", CreateValidRequest());
         var created = await createResponse.Content.ReadFromJsonAsync<StatementJobResponse>(JsonOptions);
         Assert.NotNull(created);
 
-        var list = await _client.GetFromJsonAsync<List<StatementJobResponse>>("/api/statements", JsonOptions);
+        var response = await _client.GetAsync("/api/statements");
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.True(response.IsSuccessStatusCode, $"{(int)response.StatusCode}: {body}");
+
+        var list = JsonSerializer.Deserialize<List<StatementJobResponse>>(body, JsonOptions);
         Assert.NotNull(list);
-        Assert.Contains(list, job => job.Id == created.Id);
+        Assert.Contains(list, job => job.Id == created.Id && job.Customer == "BigCo");
     }
 
     private async Task<StatementJobResponse> WaitForCompletionAsync(Guid jobId)
