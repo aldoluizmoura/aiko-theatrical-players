@@ -4,7 +4,7 @@ Solução do [desafio de backend da Aiko](https://github.com/aikodigital/teste-b
 
 O domínio gera extratos de fatura de uma companhia de teatro (tragédia, comédia e histórico), em texto e XML, com design preparado para novos gêneros e formatos.
 
-🎥 **Vídeo da apresentação:** _[inserir link aqui]_
+🎥 **Vídeo da apresentação:** https://youtu.be/N6z13OLUjnQ
 
 ---
 
